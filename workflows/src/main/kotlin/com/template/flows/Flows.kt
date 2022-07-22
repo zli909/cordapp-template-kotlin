@@ -19,7 +19,8 @@ import com.template.contracts.TemplateContract
 
 import net.corda.core.transactions.TransactionBuilder
 
-import com.template.states.TemplateState
+import net.corda.core.contracts.Command;
+import com.template.states.IOUState;
 import net.corda.core.contracts.requireThat
 import net.corda.core.identity.AbstractParty
 
@@ -29,55 +30,44 @@ import net.corda.core.identity.AbstractParty
 // *********
 @InitiatingFlow
 @StartableByRPC
-class Initiator(private val receiver: Party) : FlowLogic<SignedTransaction>() {
+class IOUFlow(val iouValue: Int,
+              val otherParty: Party) : FlowLogic<Unit>() {
+
+    /** The progress tracker provides checkpoints indicating the progress of
+    the flow to observers. */
     override val progressTracker = ProgressTracker()
 
+    /** The flow logic is encapsulated within the call() method. */
     @Suspendable
-    override fun call(): SignedTransaction {
-        //Hello World message
-        val msg = "Hello-World"
-        val sender = ourIdentity
-
-        // Step 1. Get a reference to the notary service on our network and our key pair.
-        // Note: ongoing work to support multiple notary identities is still in progress.
+    override fun call() {
+        // We retrieve the notary identity from the network map.
         val notary = serviceHub.networkMapCache.notaryIdentities[0]
 
-        //Compose the State that carries the Hello World message
-        val output = TemplateState(msg, sender, receiver)
+        // We create the transaction components.
+        val outputState = IOUState(iouValue, ourIdentity, otherParty)
+        val command = Command(TemplateContract.Commands.Create(), ourIdentity.owningKey)
 
-        // Step 3. Create a new TransactionBuilder object.
-        val builder = TransactionBuilder(notary)
-                .addCommand(TemplateContract.Commands.Create(), listOf(sender.owningKey, receiver.owningKey))
-                .addOutputState(output)
+        // We create a transaction builder and add the components.
+        val txBuilder = TransactionBuilder(notary = notary)
+                .addOutputState(outputState, TemplateContract.ID)
+                .addCommand(command)
 
-        // Step 4. Verify and sign it with our KeyPair.
-        builder.verify(serviceHub)
-        val ptx = serviceHub.signInitialTransaction(builder)
+        // We sign the transaction.
+        val signedTx = serviceHub.signInitialTransaction(txBuilder)
 
+        // Creating a session with the other party.
+        val otherPartySession = initiateFlow(otherParty)
 
-        // Step 6. Collect the other party's signature using the SignTransactionFlow.
-        val otherParties: MutableList<Party> = output.participants.stream().map { el: AbstractParty? -> el as Party? }.collect(Collectors.toList())
-        otherParties.remove(ourIdentity)
-        val sessions = otherParties.stream().map { el: Party? -> initiateFlow(el!!) }.collect(Collectors.toList())
-
-        val stx = subFlow(CollectSignaturesFlow(ptx, sessions))
-
-        // Step 7. Assuming no exceptions, we can now finalise the transaction
-        return subFlow<SignedTransaction>(FinalityFlow(stx, sessions))
+        // We finalise the transaction and then send it to the counterparty.
+        subFlow(FinalityFlow(signedTx, otherPartySession))
     }
 }
 
-@InitiatedBy(Initiator::class)
-class Responder(val counterpartySession: FlowSession) : FlowLogic<SignedTransaction>() {
+@InitiatedBy(IOUFlow::class)
+class IOUFlowResponder(private val otherPartySession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
-    override fun call(): SignedTransaction {
-        val signTransactionFlow = object : SignTransactionFlow(counterpartySession) {
-            override fun checkTransaction(stx: SignedTransaction) = requireThat {
-               //Addition checks
-            }
-        }
-        val txId = subFlow(signTransactionFlow).id
-        return subFlow(ReceiveFinalityFlow(counterpartySession, expectedTxId = txId))
+    override fun call() {
+        subFlow(ReceiveFinalityFlow(otherPartySession))
     }
 }
 
