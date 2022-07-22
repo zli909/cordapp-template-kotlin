@@ -1,6 +1,6 @@
 package com.template.contracts
 
-import com.template.states.IOUState
+import com.template.states.GoldState
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.requireSingleCommand
@@ -20,7 +20,7 @@ class TemplateContract : Contract {
     override fun verify(tx: LedgerTransaction) {
         // Verification logic goes here.
         val command = tx.commands.requireSingleCommand<Commands.Create>()
-        val output = tx.outputsOfType<IOUState>().first()
+        val output = tx.outputsOfType<GoldState>().first()
 
     }
 
