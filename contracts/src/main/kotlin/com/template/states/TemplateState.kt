@@ -18,7 +18,7 @@ class AssetState (val purity: Double,
                  val weight: Double,
                  val description: String,
                  val issuer: Party,
-                 val owner: Party,
-                 override val linearId: UniqueIdentifier = UniqueIdentifier()) : ContractState, LinearState {
+                 var owner: Party,
+                 override val linearId: UniqueIdentifier = UniqueIdentifier()) : LinearState {
     override val participants get() = listOf(issuer, owner)
 }
