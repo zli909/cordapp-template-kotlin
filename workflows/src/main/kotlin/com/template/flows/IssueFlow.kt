@@ -22,7 +22,7 @@ import com.template.states.AssetState;
 // *********
 @InitiatingFlow
 @StartableByRPC
-class issueAssetFlow(val purity: Double,
+class IssueAssetFlow(val purity: Double,
                      val serialNumber: String,
                      val weight: Double,
                      val description: String,
@@ -59,7 +59,7 @@ class issueAssetFlow(val purity: Double,
     }
 }
 
-@InitiatedBy(issueAssetFlow::class)
+@InitiatedBy(IssueAssetFlow::class)
 class AssetFlowResponder(private val otherPartySession: FlowSession) : FlowLogic<Unit>() {
     @Suspendable
     override fun call() {

@@ -30,7 +30,7 @@ class TransferFlow(val id: UniqueIdentifier, val newOwner: Party) : FlowLogic<Un
         val assetStatesList = serviceHub.vaultService.queryBy(AssetState::class.java, QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)).states
         var stateAndRefToTransfer: StateAndRef<AssetState>? = null;
 
-        print("starting id search")
+        print("starting id search\n")
         for (stateAndRef in assetStatesList) {
             print("current state id: ${stateAndRef.state.data.linearId}\n")
             if (stateAndRef.state.data.linearId == id) {
@@ -46,7 +46,7 @@ class TransferFlow(val id: UniqueIdentifier, val newOwner: Party) : FlowLogic<Un
         } else {
             var outputTransactionState = stateAndRefToTransfer.state.copy();
             outputTransactionState.data.owner = newOwner;
-            val requiredSigners: List<PublicKey> = listOf(ourIdentity.owningKey, newOwner.owningKey)
+            val requiredSigners: List<PublicKey> = listOf(ourIdentity.owningKey, outputTransactionState.data.issuer.owningKey, newOwner.owningKey)
             val command = Command(TemplateContract.Commands.Transfer(), requiredSigners)
 
             val txBuilder: TransactionBuilder = TransactionBuilder(notary);
@@ -63,11 +63,12 @@ class TransferFlow(val id: UniqueIdentifier, val newOwner: Party) : FlowLogic<Un
             txBuilder.verify(serviceHub)
             print("passed serviceHub verification\n");
             val senderSignedTx: SignedTransaction = serviceHub.signInitialTransaction(txBuilder)
+            val issuerSession = initiateFlow(outputTransactionState.data.issuer)
             val receiverSession = initiateFlow(newOwner);
             print("sending out for counterparty signature\n");
-            val fullySignedTx = subFlow(CollectSignaturesFlow(senderSignedTx, listOf(receiverSession), CollectSignaturesFlow.tracker()))
-            print("received counterparty signature$id\n");
-            subFlow(FinalityFlow(fullySignedTx, receiverSession))
+            val fullySignedTx = subFlow(CollectSignaturesFlow(senderSignedTx, listOf(issuerSession, receiverSession), CollectSignaturesFlow.tracker()))
+            print("received counterparty signature $id\n");
+            subFlow(FinalityFlow(fullySignedTx, receiverSession, issuerSession))
         }
     }
 }

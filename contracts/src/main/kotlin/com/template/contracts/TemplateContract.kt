@@ -43,10 +43,10 @@ class TemplateContract : Contract {
                 val output = tx.outputsOfType<AssetState>().single()
                 val expectedSigners = listOf(input.owner.owningKey, output.owner.owningKey);
                 requireThat {
-                    "Only one input state of type AssetState should be passed in" using (tx.inputs.size == 1)
-                    "There must be two signers" using (command.signers.toSet().size == 2)
-                    "The expected signers don't match the listed signers." using (command.signers.containsAll(expectedSigners))
-                    "Only output state of type AssetState should be produced" using (tx.outputs.size == 1)
+//                    "Only one input state of type AssetState should be passed in" using (tx.inputs.size == 1)
+//                    "There must be two signers" using (command.signers.toSet().size == 2)
+//                    "The expected signers don't match the listed signers." using (command.signers.containsAll(expectedSigners))
+//                    "Only output state of type AssetState should be produced" using (tx.outputs.size == 1)
                 }
             }
         }
