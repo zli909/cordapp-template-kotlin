@@ -26,6 +26,7 @@ class TransferFlow(val id: UniqueIdentifier, val newOwner: Party) : FlowLogic<Un
         // We create the transaction components.
 
         //list of linearStates on the vault
+        //use vaultService to find appropriate state and ref w/ linearID
         val assetStatesList = serviceHub.vaultService.queryBy(AssetState::class.java, QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)).states
         var stateAndRefToTransfer: StateAndRef<AssetState>? = null;
 

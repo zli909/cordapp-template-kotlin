@@ -1,15 +1,16 @@
 package com.template.contracts
 
-import com.template.states.TemplateState
+import com.template.states.AssetState
 import org.junit.Test
 import kotlin.test.assertEquals
 
 class StateTests {
     @Test
-    fun hasFieldOfCorrectType() {
+    fun checkSerialNumberField() {
         // Does the field exist?
-        TemplateState::class.java.getDeclaredField("msg")
+        AssetState::class.java.getDeclaredField("serialNumber")
         // Is the field of the correct type?
-        assertEquals(TemplateState::class.java.getDeclaredField("msg").type, String()::class.java)
+        assertEquals(AssetState::class.java.getDeclaredField("serialNumber").type, String()::class.java)
+        println("serial number field exists and is of type String")
     }
 }

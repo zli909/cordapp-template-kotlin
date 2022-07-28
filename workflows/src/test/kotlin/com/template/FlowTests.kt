@@ -4,7 +4,7 @@ import net.corda.testing.node.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import com.template.states.TemplateState
+import com.template.states.AssetState
 import java.util.concurrent.Future;
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
@@ -40,6 +40,6 @@ class FlowTests {
 
         //successful query means the state is stored at node b's vault. Flow went through.
         val inputCriteria: QueryCriteria = QueryCriteria.VaultQueryCriteria().withStatus(StateStatus.UNCONSUMED)
-        val state = b.services.vaultService.queryBy(TemplateState::class.java, inputCriteria).states[0].state.data
+        val state = b.services.vaultService.queryBy(AssetState::class.java, inputCriteria).states[0].state.data
     }
 }
