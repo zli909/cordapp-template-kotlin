@@ -70,5 +70,7 @@ class FlowTests {
         assertEquals(0, bVaultState.size)
         val aVaultState = a.services.vaultService.queryBy(AssetState::class.java, inputCriteria).states
         assertEquals(1, aVaultState.size)
+        val stateSerialNumber = a.services.vaultService.queryBy(AssetState::class.java, inputCriteria).states[0].state.data.serialNumber
+        assertEquals(stateSerialNumber, "0001")
     }
 }
